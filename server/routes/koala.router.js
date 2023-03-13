@@ -1,5 +1,6 @@
 const express = require('express');
 const koalaRouter = express.Router();
+const pool = require('../modules/pool.js');
 
 let koalas = [{
     id: 1,
@@ -56,15 +57,31 @@ let koalas = [{
 // GET
 koalaRouter.get('/', (req, res) => {
 console.log('GET Request made for /koalas')
-    res.send(koalas);
+let queryText = 'SELECT * FROM "koalas";';
+pool.query(queryText).then((result) => {
+  res.send(result.rows)
+}).catch((error) => {
+  console.log(`Error in GET ${error}`);
+  alert(`Something went wrong`);
+  res.sendStatus(500);
+})
 });
+
+
+
 // POST
 koalaRouter.post('/', (req, res) => {
     console.log('POST Request made for /koalas')
     console.log(req.body);
     let koalaToAdd = req.body;
-    koalas.push(koalaToAdd)
-    res.sendStatus(201);
+    let queryText = `INSERT INTO "koalas" ("name", "gender", "age", "readyToTransfer", "notes")
+                    Values ($1, $2, $3, $4, $5);`;
+    pool.query(queryText, [koalaToAdd.name, koalaToAdd.gender, koalaToAdd.age, koalaToAdd.readyToTransfer, koalaToAdd.notes]).then((result) => {
+      res.sendStatus(201);
+    }).catch((error) => {
+      console.log(`Error in POST ${error}`);
+      res.sendStatus(500);
+    })
 });
 
 // PUT
